@@ -1,49 +1,59 @@
-
+import {BrowserRouter, Route, Routes} from "react-router-dom";
 import logo from './logo.png';
 import './App.css';
- 
+import MarketplaceABI from "../contractsData/Marketplace.json";
+import MarketplaceAddress from "../contractsData/Marketplace-address.json";
+import NFTABI from "../contractsData/NFT.json";
+import NFTAddress from "../contractsData/NFT-address.json";
+import {ethers} from 'ethers';
+import {useEffect, useState} from "react";
+import {address} from "hardhat/internal/core/config/config-validation";
+import Navigation from "./Navbar";
+import {Spinner} from "react-bootstrap";
+import Home from "./Home";
+
 function App() {
-  return (
-    <div>
-      <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-        <a
-          className="navbar-brand col-sm-3 col-md-2 ms-3"
-          href="http://www.dappuniversity.com/bootcamp"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Dapp University
-        </a>
-      </nav>
-      <div className="container-fluid mt-5">
-        <div className="row">
-          <main role="main" className="col-lg-12 d-flex text-center">
-            <div className="content mx-auto mt-5">
-              <a
-                href="http://www.dappuniversity.com/bootcamp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img src={logo} className="App-logo" alt="logo"/>
-              </a>
-              <h1 className= "mt-5">Dapp University Starter Kit</h1>
-              <p>
-                Edit <code>src/frontend/components/App.js</code> and save to reload.
-              </p>
-              <a
-                className="App-link"
-                href="http://www.dappuniversity.com/bootcamp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                LEARN BLOCKCHAIN <u><b>NOW! </b></u>
-              </a>
+    const [loading, setLoading] = useState(true);
+    const [account, setAccount] = useState(null);
+    const [nft, setNFT] = useState({});
+    const [marketplace, setMarketplace] = useState({});
+
+    const web3Functions = async () => {
+        const accounts = await window.ethereum.request({method: "eth_requestAccounts"});
+        setAccount(accounts[0]);
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = await provider.getSigner();
+        loadContracts(signer);
+    }
+
+    const loadContracts = async (signer) => {
+        const marketplace = new ethers.Contract(MarketplaceAddress.address, MarketplaceABI.abi, signer);
+        const nft = new ethers.Contract(NFTAddress.address, NFTABI.abi, signer);
+        setMarketplace(marketplace);
+        setNFT(nft);
+        setLoading(false);
+    }
+    useEffect(() => {
+        web3Functions();
+    }, []);
+    return (
+        <BrowserRouter>
+            <div>
+                <Navigation web3Handler={web3Functions} account={account}/>
+                {loading ? (
+                    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh'}}>
+                        <Spinner animation="border" style={{display: 'flex'}}/>
+                        <p className='mx-3 my-0'>Awaiting Metamask Connection...</p>
+                    </div>
+                ) : (
+                    <Routes>
+                        <Route path="/" element={<Home />}/>
+
+                    </Routes>
+                )}
             </div>
-          </main>
-        </div>
-      </div>
-    </div>
-  );
+        </BrowserRouter>
+    );
 }
 
 export default App;
