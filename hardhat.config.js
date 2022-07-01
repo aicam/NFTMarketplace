@@ -7,7 +7,9 @@ module.exports = {
   solidity: "0.8.4",
   defaultNetwork: "polygon_mumbai",
   networks: {
-    hardhat: {},
+    hardhat: {
+      chainId: 33981
+    },
     polygon_mumbai: {
       url: NFT_URL,
       accounts: [`0x${PRIVATE_KEY}`, `0x${PRIVATE_KEY2}`]
